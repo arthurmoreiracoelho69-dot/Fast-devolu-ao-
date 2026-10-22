@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Devolução Digital FAST</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+  --bg:#E9F0E7; --surface:#FFFFFF; --surface2:#F2F7F0; --ink:#0E2A1A; --muted:#566B5E; --line:#D5E1D3;
+  --brand:#00692F; --btn:#00692F; --btn-ink:#FFFFFF; --lime:#7AE01F; --lime-ink:#0E2A1A;
+  --danger:#C2362B; --danger-bg:#FBE9E6; --warn:#9A6200; --warn-bg:#FFF1D6; --ok:#12793A; --ok-bg:#DDF3E3;
+  --frame:#17231C; --cam:#050A07;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#07120B; --surface:#0F1F15; --surface2:#142A1C; --ink:#E7F2E8; --muted:#97AE9F; --line:#244232;
+    --brand:#7AE01F; --btn:#7AE01F; --btn-ink:#0A1A10; --danger:#FF8A7D; --danger-bg:#3A1714; --warn:#F2B84B; --warn-bg:#3A2A0A; --ok:#7BE79B; --ok-bg:#12341D;
+    --frame:#020604;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#07120B; --surface:#0F1F15; --surface2:#142A1C; --ink:#E7F2E8; --muted:#97AE9F; --line:#244232;
+  --brand:#7AE01F; --btn:#7AE01F; --btn-ink:#0A1A10; --danger:#FF8A7D; --danger-bg:#3A1714; --warn:#F2B84B; --warn-bg:#3A2A0A; --ok:#7BE79B; --ok-bg:#12341D;
+  --frame:#020604;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Bricolage Grotesque','DM Sans',system-ui,sans-serif;margin:0;line-height:1.1;letter-spacing:-0.01em}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:12px}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:env(safe-area-inset-top,0px);z-index:20;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px}
+.brand i{width:26px;height:26px;border-radius:8px;background:var(--brand);display:grid;place-items:center}
+.brand i::after{content:"";width:10px;height:10px;border-radius:3px;background:var(--lime)}
+.brand small{font-family:'DM Sans',sans-serif;font-weight:500;font-size:13px;color:var(--muted)}
+.tabs{display:flex;gap:4px;margin-left:auto;background:var(--surface2);padding:4px;border-radius:12px;border:1px solid var(--line)}
+.tab{border:0;background:transparent;padding:8px 14px;border-radius:9px;font-weight:600;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--btn);color:var(--btn-ink)}
+.tab .n{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:var(--lime);color:var(--lime-ink);font-size:11px;margin-left:6px;padding:0 5px}
+.ghost{border:1px solid var(--line);background:transparent;border-radius:10px;padding:8px 12px;font-weight:600;color:var(--muted)}
+
+/* stage */
+.stage{display:grid;grid-template-columns:minmax(0,410px) minmax(0,1fr);gap:32px;max-width:1120px;margin:0 auto;padding:24px 20px 48px;align-items:start}
+.phone{width:410px;height:820px;border-radius:50px;border:10px solid var(--frame);background:var(--surface);overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(8,30,16,.28)}
+.scr{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+.scr-head{display:flex;align-items:center;justify-content:space-between;padding:22px 20px 8px;font-weight:700}
+.scr-head .lg{display:flex;align-items:center;gap:8px;font-family:'Bricolage Grotesque',sans-serif;font-size:17px}
+.scr-head .lg i{width:20px;height:20px;border-radius:6px;background:var(--brand);display:grid;place-items:center}
+.scr-head .lg i::after{content:"";width:8px;height:8px;border-radius:2px;background:var(--lime)}
+.scr-body{flex:1;min-height:0;overflow-y:auto;padding:8px 20px 20px}
+.scr-foot{padding:12px 20px 20px;border-top:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.btn{border:0;background:var(--btn);color:var(--btn-ink);padding:14px 18px;border-radius:14px;font-weight:700;font-size:16px;width:100%}
+.btn.sec{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.warn{background:transparent;color:var(--danger);border:1.5px solid var(--danger)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{width:auto;padding:9px 14px;font-size:14px;border-radius:10px}
+h1.big{font-size:34px;margin:18px 0 10px}
+.lead{color:var(--muted);margin:0 0 18px}
+.field{display:flex;gap:8px;margin:6px 0}
+.field input,.field textarea,.sheet input[type=number]{flex:1;border:1.5px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:12px;padding:12px 14px;font:inherit;min-width:0}
+.field textarea{min-height:84px;resize:vertical}
+.err{color:var(--danger);font-weight:600;margin:6px 0}
+.chips{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.chipbtn{display:flex;justify-content:space-between;align-items:center;text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.chipbtn b{display:block}
+.chipbtn span{color:var(--muted);font-size:13px}
+.card{background:var(--surface2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:12px 0}
+.card h3{font-size:18px;margin-bottom:6px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.kv span:last-child{font-weight:600;text-align:right}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12.5px;font-weight:700;background:var(--ok-bg);color:var(--ok);white-space:nowrap}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.bad{background:var(--danger-bg);color:var(--danger)}
+.pill.mute{background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+ul.plain{list-style:none;margin:0;padding:0}
+ul.plain li{display:flex;gap:10px;padding:6px 0}
+ul.plain li::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--lime);margin-top:7px;outline:2px solid var(--brand)}
+
+/* camera */
+.cam-screen{position:absolute;inset:0;background:var(--cam);display:flex;flex-direction:column;color:#fff;z-index:5}
+.cam-view{position:absolute;inset:0;overflow:hidden}
+.cam-view video,.cam-view canvas{width:100%;height:100%;object-fit:cover;display:block;background:#000}
+.cam-top{position:relative;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;padding:22px 16px 40px;background:linear-gradient(#000c,#0000)}
+.cam-top .t{font-weight:700;font-size:22px;font-family:'Bricolage Grotesque',sans-serif;line-height:1.1}
+.cam-top .s{font-size:13px;opacity:.85}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;background:#0008;border-radius:999px;padding:4px 10px}
+.live::before{content:"";width:8px;height:8px;border-radius:50%;background:#ff4d3d;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.xbtn{background:#0008;border:0;color:#fff;border-radius:999px;padding:7px 12px;font-weight:600;font-size:13px}
+.guide{position:relative;z-index:1;flex:1;display:grid;place-items:center;pointer-events:none}
+.ring{width:170px;height:170px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .bg{stroke:#fff5}
+.ring .fg{stroke:#7AE01F;stroke-linecap:round;stroke-dasharray:327;stroke-dashoffset:327;transition:stroke-dashoffset .12s linear,stroke .2s}
+.ring.bad .fg{stroke:#ffb04d}
+.brk{position:absolute;inset:14% 8%;border:2px dashed #fff6;border-radius:22px}
+.cam-bot{position:relative;z-index:2;padding:46px 16px 18px;background:linear-gradient(#0000,#000d)}
+.say{font-weight:700;font-size:16px;text-align:center;min-height:44px}
+.say.ok{color:#7AE01F}
+.meters{display:flex;justify-content:center;gap:14px;margin:8px 0 12px;font-size:12.5px}
+.meters span{display:flex;align-items:center;gap:6px;opacity:.9}
+.meters i{width:10px;height:10px;border-radius:50%;background:#ffb04d}
+.meters i.ok{background:#7AE01F}
+.strip{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.strip b{width:34px;height:34px;border-radius:8px;border:1.5px solid #fff4;background-size:cover;background-position:center;display:block}
+.strip b.cur{border-color:#7AE01F;box-shadow:0 0 0 2px #7AE01F55}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:7;pointer-events:none}
+.flash.go{animation:fl .35s ease-out}
+@keyframes fl{0%{opacity:.85}100%{opacity:0}}
+.minimap{width:54px;height:70px;flex:none}
+.camfail{position:absolute;inset:0;z-index:6;background:var(--cam);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px}
+.sheet{position:absolute;inset:0;z-index:9;background:#000a;display:flex;align-items:flex-end}
+.sheet>div{background:var(--surface);color:var(--ink);width:100%;border-radius:22px 22px 0 0;padding:20px;display:flex;flex-direction:column;gap:10px}
+.fuelbar{display:flex;gap:4px}
+.fuelbar i{flex:1;height:14px;border-radius:4px;background:var(--line)}
+.fuelbar i.on{background:var(--brand)}
+input[type=range]{width:100%;accent-color:var(--brand)}
+
+/* review */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.th{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#000}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+.th figcaption{position:absolute;left:0;right:0;bottom:0;background:#000b;color:#fff;font-size:11px;padding:3px 6px;display:flex;justify-content:space-between;align-items:center}
+.th button{border:0;background:transparent;color:#7AE01F;font-size:11px;font-weight:700;padding:0}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border-bottom:0}
+.row small{display:block;color:var(--muted)}
+details.why summary{cursor:pointer;color:var(--brand);font-weight:600;font-size:13px;margin-top:2px}
+details.why p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.total{display:flex;justify-content:space-between;font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;padding-top:10px}
+.sim{font-size:11px;font-weight:700;color:var(--warn);background:var(--warn-bg);padding:1px 7px;border-radius:6px;margin-left:6px;vertical-align:1px}
+.real{font-size:11px;font-weight:700;color:var(--ok);background:var(--ok-bg);padding:1px 7px;border-radius:6px;margin-left:6px;vertical-align:1px}
+
+/* side */
+.side{display:flex;flex-direction:column;gap:18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 20px}
+.panel h2{font-size:20px;margin-bottom:4px}
+.panel p.sub{margin:0 0 12px;color:var(--muted);font-size:14px}
+.log{list-style:none;margin:0;padding:0;max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.log li{font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.log li time{color:var(--muted);margin-right:8px}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl label{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);font-weight:500}
+.ctl input{accent-color:var(--brand);width:18px;height:18px}
+.ctl small{color:var(--muted);display:block;font-weight:400}
+
+/* team */
+.wide{max-width:1120px;margin:0 auto;padding:24px 20px 48px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{font-family:'Bricolage Grotesque',sans-serif;font-size:30px;display:block;line-height:1}
+.stat span{color:var(--muted);font-size:13.5px}
+.team{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;align-items:start}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:block;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px}
+.item[aria-current="true"]{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb,var(--lime) 40%,transparent)}
+.item .r{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.item small{color:var(--muted)}
+.empty{background:var(--surface);border:1.5px dashed var(--line);border-radius:16px;padding:28px;text-align:center;color:var(--muted)}
+.evi{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.evi figure{margin:0;background:var(--surface2);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.evi img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#000}
+.evi figcaption{padding:8px 10px;font-size:12.5px}
+.evi figcaption b{display:block;font-size:13.5px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.actions .btn{width:auto}
+table.k{width:100%;border-collapse:collapse;font-size:14px}
+table.k th,table.k td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.k th{color:var(--muted);font-weight:600;font-size:13px}
+.scroll-x{overflow-x:auto}
+.vid{width:100%;border-radius:14px;background:#000;max-height:520px}
+.hide{display:none!important}
+
+@media (max-width:900px){
+  .stage{grid-template-columns:1fr;padding:0 0 32px;gap:20px}
+  .phone{width:100%;height:calc(100dvh - 130px);min-height:560px;border:0;border-radius:0;box-shadow:none}
+  .side{padding:0 16px}
+  .team{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .tabs{margin-left:0;width:100%}
+  .tab{flex:1}
+}
+@media (prefers-reduced-motion:reduce){
+  .live::before{animation:none}.flash.go{animation:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><i></i>Devolução FAST <small>protótipo · FDC Tech Week</small></div>
+  <nav class="tabs" role="tablist" aria-label="Visões do protótipo">
+    <button class="tab" role="tab" data-act="tab" data-tab="cliente" id="tab-cliente">Cliente</button>
+    <button class="tab" role="tab" data-act="tab" data-tab="equipe" id="tab-equipe">Equipe<span class="n hide" id="teamN">0</span></button>
+    <button class="tab" role="tab" data-act="tab" data-tab="kpi" id="tab-kpi">Indicadores</button>
+  </nav>
+  <button class="ghost" data-act="theme" aria-label="Alternar tema claro e escuro">Tema</button>
+</header>
+
+<main>
+  <section id="view-cliente" class="stage">
+    <div class="phone"><div class="scr" id="scr"></div></div>
+    <aside class="side">
+      <div class="panel">
+        <h2>Registro de integridade</h2>
+        <p class="sub">O que o app verifica durante a vistoria. “Real” roda neste protótipo; “simulado” depende de serviços que só existem no app nativo.</p>
+        <ul class="log" id="log" aria-live="polite"><li>Nenhuma vistoria iniciada.</li></ul>
+      </div>
+      <div class="panel">
+        <h2>Controles de demonstração</h2>
+        <p class="sub">Provoque situações para ver como o app reage.</p>
+        <div class="ctl">
+          <label><input type="checkbox" id="d-cam"> <span>Usar câmera simulada<small>Para quando o navegador não liberar a câmera.</small></span></label>
+          <label><input type="checkbox" id="d-dark"> <span>Pouca luz<small>Só na câmera simulada: o app deve pedir mais luz.</small></span></label>
+          <label><input type="checkbox" id="d-shake"> <span>Mão tremendo<small>Só na câmera simulada: o app deve pedir firmeza.</small></span></label>
+          <label><input type="checkbox" id="d-dirty"> <span>Interior sujo<small>A IA aponta limpeza e gera cobrança.</small></span></label>
+          <label><input type="checkbox" id="d-damage"> <span>Arranhão novo na lateral esquerda<small>Cobertura depende da proteção do contrato.</small></span></label>
+          <label><input type="checkbox" id="d-far"> <span>Carro longe da vaga combinada<small>A conclusão deve ser bloqueada até o carro chegar à vaga.</small></span></label>
+          <button class="ghost" data-act="anchor" style="margin-top:4px">Definir minha posição como a vaga combinada</button>
+          <small id="anchorTxt" style="color:var(--muted)">Sem vaga definida: a checagem de local é simulada. Se você definir, ela usa o GPS de verdade, com raio de 100 m.</small>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section id="view-equipe" class="wide hide"></section>
+  <section id="view-kpi" class="wide hide"></section>
+</main>
+
+<script>
+/* ---------- dados fictícios ---------- */
+const CONTRACTS = {
+  'LZ-48213': {id:'LZ-48213', plate:'RIO2F47', model:'BYD Song Plus', cat:'SUV híbrido', protection:'total', kmOut:41870, kmDefault:42410, fuelDefault:8, fuelOut:8, agency:'Aeroporto de Confins', client:'Marina Souza'},
+  'LZ-51877': {id:'LZ-51877', plate:'QWE4B19', model:'Honda HR-V', cat:'SUV compacto', protection:'basica', kmOut:23190, kmDefault:23940, fuelDefault:6, fuelOut:8, agency:'Aeroporto de Confins', client:'Rafael Lima'}
+};
+const SHOTS = {
+  frente:{label:'Frente', zone:'front', tip:'Fique a uns 3 metros e enquadre o carro inteiro, com a placa à vista.'},
+  lat_esq:{label:'Lateral esquerda', zone:'left', tip:'Mostre a lateral inteira, das rodas ao teto.'},
+  traseira:{label:'Traseira', zone:'rear', tip:'Enquadre a traseira inteira, com a placa à vista.'},
+  lat_dir:{label:'Lateral direita', zone:'right', tip:'Mostre a lateral inteira, das rodas ao teto.'},
+  painel:{label:'Painel', zone:'dash', tip:'Com o carro ligado, enquadre o odômetro e o marcador de combustível.'},
+  interior:{label:'Interior', zone:'inside', tip:'Mostre os bancos da frente e de trás.'},
+  porta_malas:{label:'Porta-malas', zone:'trunk', tip:'Abra o porta-malas e mostre o espaço inteiro.'}
+};
+const ORDER = {frente:'Vá para a frente do carro e pare.', lat_esq:'Agora vá para a lateral esquerda.', traseira:'Agora vá para a traseira do carro.', lat_dir:'Agora vá para a lateral direita.', painel:'Entre no carro, ligue e mostre o painel.', interior:'Agora mostre o interior, os bancos da frente e de trás.', porta_malas:'Por fim, abra e mostre o porta-malas.'};
+const ORDER_TITLE = {frente:'Vá para a frente', lat_esq:'Vá para a lateral esquerda', traseira:'Vá para a traseira', lat_dir:'Vá para a lateral direita', painel:'Mostre o painel', interior:'Mostre o interior', porta_malas:'Mostre o porta-malas'};
+function speak(t){ if(!S.voice||S.native||!('speechSynthesis' in window)) return; try{speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='pt-BR'; speechSynthesis.speak(u);}catch(e){} }
+const shotKeys = c => c.protection==='total'
+  ? ['frente','lat_esq','traseira','lat_dir','painel','interior']
+  : ['frente','lat_esq','traseira','lat_dir','painel','interior','porta_malas'];
+const STATUS = ['Aguardando vistoria','Divergência','Vistoria validada','Contrato encerrado'];
+const brl = v => 'R$ ' + v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const km = v => v.toLocaleString('pt-BR') + ' km';
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = (s,r=document)=>r.querySelector(s);
+
+/* ---------- estado ---------- */
+const S = {tab:'cliente', screen:'start', contract:null, shots:[], queue:[], qi:0, retake:false,
+  km:null, fuel:null, startedAt:0, warns:0, searchErr:'', contesting:false, current:null,
+  returns:[], selected:null, prevHash:'GENESIS', geo:null, log:[], camError:null, sheet:false,
+  anchor:null, vidUrl:'', spot:null, locking:false, lockAt:null, native:false, voice:true};
+const DEMO = {cam:false, dark:false, shake:false, dirty:false, damage:false, far:false};
+const DEMO_VIDEO = ''; // preencher com o vídeo gravado quando for embutido na página
+
+/* ---------- utilidades ---------- */
+async function sha256(str){
+  try{
+    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return [...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  }catch(e){
+    let h=2166136261; for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}
+    return ('00000000'+(h>>>0).toString(16)).repeat(8);
+  }
+}
+const short = h => h.slice(0,8)+'…'+h.slice(-4);
+const hhmmss = d => d.toLocaleTimeString('pt-BR');
+function addLog(text, real){
+  S.log.unshift({t:new Date(), text, real});
+  S.log = S.log.slice(0,60);
+  renderLog();
+}
+function renderLog(){
+  const el = $('#log'); if(!el) return;
+  el.innerHTML = S.log.length ? S.log.map(l=>`<li><time class="mono">${hhmmss(l.t)}</time>${esc(l.text)}<span class="${l.real?'real':'sim'}">${l.real?'real':'simulado'}</span></li>`).join('') : '<li>Nenhuma vistoria iniciada.</li>';
+}
+
+/* ---------- cena simulada ---------- */
+function rng(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function drawScene(ctx,w,h,key,t,o){
+  ctx.save();
+  const j = o.shake ? [Math.sin(t*37)*10, Math.cos(t*29)*10] : [Math.sin(t*1.3)*0.5,0];
+  ctx.translate(j[0],j[1]);
+  const ext = ['frente','lat_esq','traseira','lat_dir'].includes(key);
+  const g = ctx.createLinearGradient(0,0,0,h);
+  if(ext){g.addColorStop(0,'#8fb6c9');g.addColorStop(.52,'#d3dcd9');g.addColorStop(.52,'#707773');g.addColorStop(1,'#4b524d')}
+  else if(key==='painel'){g.addColorStop(0,'#2b3530');g.addColorStop(1,'#111512')}
+  else if(key==='interior'){g.addColorStop(0,'#bfae93');g.addColorStop(1,'#716555')}
+  else {g.addColorStop(0,'#3e4341');g.addColorStop(1,'#1c1f1e')}
+  ctx.fillStyle=g; ctx.fillRect(-20,-20,w+40,h+40);
+  const r = rng(key.length*977+13);
+  for(let i=0;i<340;i++){ctx.fillStyle=`rgba(${r()>.5?255:0},${r()>.5?255:0},${r()>.5?255:0},${.05+r()*.12})`;ctx.fillRect(r()*w,r()*h,2+r()*6,2+r()*6)}
+  const cx=w/2, cy=h*.55;
+  if(key==='lat_esq'||key==='lat_dir'){
+    ctx.fillStyle='#dfe5e2'; rr(ctx,cx-190,cy-56,380,84,28); ctx.fill();
+    ctx.beginPath();ctx.moveTo(cx-112,cy-52);ctx.lineTo(cx-66,cy-122);ctx.lineTo(cx+72,cy-122);ctx.lineTo(cx+124,cy-52);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#587487';ctx.beginPath();ctx.moveTo(cx-96,cy-58);ctx.lineTo(cx-60,cy-112);ctx.lineTo(cx-4,cy-112);ctx.lineTo(cx-4,cy-58);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(cx+8,cy-58);ctx.lineTo(cx+8,cy-112);ctx.lineTo(cx+66,cy-112);ctx.lineTo(cx+108,cy-58);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#1a1e1d';[cx-112,cx+112].forEach(x=>{ctx.beginPath();ctx.arc(x,cy+26,38,0,7);ctx.fill();ctx.fillStyle='#a2aca8';ctx.beginPath();ctx.arc(x,cy+26,19,0,7);ctx.fill();ctx.fillStyle='#1a1e1d'});
+    ctx.strokeStyle='#aab3af';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx+6,cy-52);ctx.lineTo(cx+6,cy+6);ctx.moveTo(cx-100,cy-14);ctx.lineTo(cx-70,cy-14);ctx.stroke();
+    if(o.damage && key==='lat_esq'){ctx.strokeStyle='#6e2a2a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx-60,cy-6);ctx.lineTo(cx-8,cy-30);ctx.moveTo(cx-56,cy);ctx.lineTo(cx-18,cy-20);ctx.stroke()}
+  } else if(key==='frente'||key==='traseira'){
+    const front = key==='frente';
+    ctx.fillStyle='#dfe5e2'; rr(ctx,cx-125,cy-60,250,108,26); ctx.fill();
+    ctx.beginPath();ctx.moveTo(cx-90,cy-58);ctx.lineTo(cx-64,cy-116);ctx.lineTo(cx+64,cy-116);ctx.lineTo(cx+90,cy-58);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#587487';ctx.beginPath();ctx.moveTo(cx-78,cy-62);ctx.lineTo(cx-56,cy-108);ctx.lineTo(cx+56,cy-108);ctx.lineTo(cx+78,cy-62);ctx.closePath();ctx.fill();
+    ctx.fillStyle=front?'#fff6c8':'#d83a30';rr(ctx,cx-112,cy-36,52,20,8);ctx.fill();rr(ctx,cx+60,cy-36,52,20,8);ctx.fill();
+    ctx.fillStyle='#f5f5f0';rr(ctx,cx-44,cy+2,88,26,5);ctx.fill();ctx.fillStyle='#17321f';ctx.font='700 17px "JetBrains Mono",monospace';ctx.textAlign='center';ctx.fillText(o.plate||'RIO2F47',cx,cy+22);
+    ctx.fillStyle='#1a1e1d';ctx.fillRect(cx-140,cy+20,24,40);ctx.fillRect(cx+116,cy+20,24,40);
+  } else if(key==='painel'){
+    ctx.fillStyle='#0a0d0b';[[cx-92,cy-30,78],[cx+92,cy-30,78]].forEach(([x,y,rad])=>{ctx.beginPath();ctx.arc(x,y,rad,0,7);ctx.fill();ctx.strokeStyle='#7AE01F';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,rad-6,Math.PI*.8,Math.PI*2.2);ctx.stroke()});
+    ctx.fillStyle='#e8f5e6';ctx.textAlign='center';ctx.font='700 26px "JetBrains Mono",monospace';ctx.fillText(o.km||'42.410',cx-92,cy-22);ctx.font='13px sans-serif';ctx.fillText('km',cx-92,cy-4);
+    ctx.fillStyle='#7AE01F';rr(ctx,cx+60,cy-40,64,14,4);ctx.fill();ctx.fillStyle='#e8f5e6';ctx.font='700 14px sans-serif';ctx.fillText('E        F',cx+92,cy+4);
+  } else if(key==='interior'){
+    ctx.fillStyle='#2c3034';[cx-110,cx+30].forEach(x=>{rr(ctx,x,cy-80,80,150,18);ctx.fill();rr(ctx,x+14,cy-120,52,50,12);ctx.fill()});
+    ctx.fillStyle='#1c1f22';ctx.fillRect(cx-20,cy+40,40,50);
+    if(o.dirty){ctx.fillStyle='rgba(88,58,30,.75)';[[cx-70,cy-20,22],[cx+60,cy+10,16],[cx-20,cy+60,26],[cx+90,cy-40,12]].forEach(([x,y,q])=>{ctx.beginPath();ctx.arc(x,y,q,0,7);ctx.fill()});ctx.fillStyle='#e6d8a8';ctx.fillRect(cx+10,cy+80,30,12)}
+  } else {
+    ctx.fillStyle='#292d2b';rr(ctx,cx-170,cy-90,340,200,16);ctx.fill();ctx.fillStyle='#1b1e1d';rr(ctx,cx-130,cy-60,260,140,10);ctx.fill();
+    ctx.strokeStyle='#4a504d';ctx.lineWidth=2;ctx.strokeRect(cx-60,cy-30,120,60);
+  }
+  ctx.restore();
+  if(o.dark){ctx.fillStyle='rgba(0,0,0,.84)';ctx.fillRect(0,0,w,h)}
+}
+
+/* ---------- câmera ---------- */
+const CAM = {mode:null, stream:null, el:null, raf:0, timer:0, running:false, busy:false, hold:0, prev:null, lastState:'', track:null, torch:false};
+const ana = document.createElement('canvas'); ana.width=160; ana.height=120;
+const actx = ana.getContext('2d',{willReadFrequently:true});
+const curKey = () => S.queue.length ? S.current.keys[S.queue[S.qi]] : 'frente';
+
+function stopCamera(){
+  CAM.running=false; cancelAnimationFrame(CAM.raf); clearInterval(CAM.timer);
+  if(CAM.stream){CAM.stream.getTracks().forEach(t=>t.stop());}
+  CAM.stream=null; CAM.el=null; CAM.track=null; CAM.torch=false;
+  window.removeEventListener('devicemotion', onMotion);
+}
+let motionSeen=false;
+function onMotion(){ if(!motionSeen){motionSeen=true; addLog('Sensores de movimento ativos: o giro do celular acompanha o vídeo',true);} }
+
+async function startCamera(){
+  stopCamera(); S.camError=null;
+  if(S.native){nativeUI();return;}
+  const holder = $('#camHolder'); if(!holder) return;
+  try{ window.addEventListener('devicemotion', onMotion);}catch(e){}
+  if(DEMO.cam){
+    holder.innerHTML='<canvas id="cam" width="480" height="640"></canvas>';
+    CAM.el=$('#cam'); CAM.mode='demo';
+    addLog('Câmera simulada iniciada. A galeria está bloqueada neste fluxo',false);
+    startLoops(); return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){showCamFail('Este navegador não permite acesso à câmera.');return;}
+  try{
+    const stream = await Promise.race([navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960}},audio:false}), new Promise((_,rej)=>setTimeout(()=>rej({name:'Timeout'}),12000))]);
+    if(S.screen!=='capture'){stream.getTracks().forEach(t=>t.stop());return;}
+    holder.innerHTML='<video id="cam" playsinline muted autoplay></video>';
+    const v=$('#cam'); v.srcObject=stream; v.play().catch(()=>{});
+    CAM.stream=stream; CAM.el=v; CAM.mode='real'; CAM.track=stream.getVideoTracks()[0];
+    try{const caps=CAM.track.getCapabilities&&CAM.track.getCapabilities(); CAM.canTorch=!!(caps&&caps.torch);}catch(e){CAM.canTorch=false}
+    $('#torchBtn').classList.toggle('hide',!CAM.canTorch);
+    addLog('Câmera ao vivo iniciada. Não existe opção de enviar foto da galeria',true);
+    startLoops();
+  }catch(err){
+    showCamFail('Não conseguimos abrir a câmera ('+((err&&err.name)||'erro')+'). Libere a permissão no navegador ou use a câmera simulada.');
+  }
+}
+function showCamFail(msg){
+  S.camError=msg; addLog('Câmera indisponível: '+msg,true);
+  const el=$('#camFail'); if(!el) return; el.classList.remove('hide'); $('#camFailMsg').textContent=msg;
+}
+function startLoops(){
+  CAM.running=true; CAM.hold=0; CAM.prev=null; CAM.busy=false; CAM.lastState=''; armShot();
+  const draw=()=>{
+    if(!CAM.running) return;
+    if(CAM.mode==='demo' && CAM.el){
+      drawScene(CAM.el.getContext('2d'),480,640,curKey(),performance.now()/1000,{dark:DEMO.dark,shake:DEMO.shake,dirty:DEMO.dirty,damage:DEMO.damage,plate:S.current.contract.plate,km:S.current.contract.kmDefault.toLocaleString('pt-BR')});
+    }
+    CAM.raf=requestAnimationFrame(draw);
+  };
+  draw();
+  CAM.timer=setInterval(analyze,120);
+}
+function armShot(){
+  CAM.phaseStart=performance.now(); CAM.moveAccum=0; CAM.needMove=!(S.qi===0);
+  if(S.qi===0) CAM.lastThumb=null;
+  speak(ORDER[curKey()]);
+}
+function analyze(){
+  if(!CAM.running||CAM.busy||!CAM.el) return;
+  if(CAM.mode==='real' && CAM.el.readyState<2) return;
+  const W=160,H=120; actx.drawImage(CAM.el,0,0,W,H);
+  const d=actx.getImageData(0,0,W,H).data, N=W*H, g=new Float32Array(N);
+  let sum=0,clip=0;
+  for(let i=0;i<N;i++){const y=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2];g[i]=y;sum+=y;if(y>245)clip++;}
+  const mean=sum/N;
+  let s=0,s2=0,n=0;
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const c=y*W+x;const l=-4*g[c]+g[c-1]+g[c+1]+g[c-W]+g[c+W];s+=l;s2+=l*l;n++;}
+  const lv=s2/n-(s/n)*(s/n);
+  let diff=0; if(CAM.prev){for(let i=0;i<N;i++)diff+=Math.abs(g[i]-CAM.prev[i]);diff/=N;}
+  CAM.prev=g;
+  const th=new Float32Array(768); for(let yy=0;yy<24;yy++)for(let xx=0;xx<32;xx++)th[yy*32+xx]=g[(yy*5+2)*W+(xx*5+2)];
+  CAM.curThumb=th;
+  if(diff>8) CAM.moveAccum+=diff-8;
+  const demo=CAM.mode==='demo', elapsed=performance.now()-CAM.phaseStart;
+  const moved=demo||!CAM.needMove||CAM.moveAccum>=50, timeOk=elapsed>=(demo?4000:(CAM.needMove?5000:6000));
+  let sceneOk=true; if(!demo&&CAM.lastThumb){let sd=0;for(let i=0;i<768;i++)sd+=Math.abs(th[i]-CAM.lastThumb[i]);sceneOk=sd/768>=14;}
+  const placed=moved&&timeOk&&sceneOk;
+  const lowLight = mean<30, glare = clip/N>0.35 || mean>242, blurry = lv<5, shaky = diff>9;
+  const okLight = !lowLight && !glare, okSharp = !blurry, okSteady = !shaky;
+  let state='ok', msg='Perfeito. Segure assim…';
+  if(lowLight){state='luz';msg='Pouca luz. Acenda a lanterna ou procure um lugar mais claro.'}
+  else if(glare){state='reflexo';msg='Reflexo forte. Mude um pouco o ângulo.'}
+  else if(!moved){state='ande';msg='Ande até a posição indicada e pare.'}
+  else if(!sceneOk){state='igual';msg='Esta imagem ainda é igual à da foto anterior. Mude de posição.'}
+  else if(!timeOk){state='ajuste';msg='Quase lá. Enquadre o carro com calma.'}
+  else if(shaky){state='tremor';msg='Segure firme o celular.'}
+  else if(blurry){state='nitidez';msg='Imagem sem nitidez. Aproxime e espere o foco.'}
+  if(state!==CAM.lastState && ['luz','reflexo','tremor','nitidez'].includes(state)){S.warns++;}
+  CAM.lastState=state;
+  const all = placed&&okLight&&okSharp&&okSteady;
+  CAM.hold = all ? Math.min(CAM.hold+120,1500) : Math.max(CAM.hold-60,0);
+  CAM.metrics={luz:Math.round(mean),nitidez:Math.round(lv),firmeza:+diff.toFixed(1)};
+  paintCamUI(all,msg,okLight,okSharp,okSteady);
+  if(CAM.hold>=1500){CAM.busy=true; takePhoto();}
+}
+function paintCamUI(all,msg,a,b,c){
+  const say=$('#say'); if(!say) return;
+  say.textContent=msg; say.className='say'+(all?' ok':'');
+  const ring=$('#ringfg'); if(ring){const C=2*Math.PI*52; ring.style.strokeDasharray=C; ring.style.strokeDashoffset=C*(1-CAM.hold/1500); $('#ring').classList.toggle('bad',!all)}
+  const fb=$('#forceBtn'); if(fb) fb.classList.toggle('hide',(performance.now()-CAM.phaseStart)<25000);
+  [['mLuz',a],['mNit',b],['mFir',c]].forEach(([id,ok])=>{const e=$('#'+id); if(e)e.className=ok?'ok':''});
+}
+async function takePhoto(){
+  const key=curKey(), meta=SHOTS[key], cv=document.createElement('canvas');
+  const vw = CAM.mode==='real'?CAM.el.videoWidth:480, vh = CAM.mode==='real'?CAM.el.videoHeight:640;
+  const tw=640, th=Math.round(tw*vh/vw); cv.width=tw; cv.height=th;
+  cv.getContext('2d').drawImage(CAM.el,0,0,tw,th);
+  const img=cv.toDataURL('image/jpeg',.8), ts=new Date();
+  const imgHash=await sha256(img);
+  const chain=await sha256(S.prevHash+'|'+imgHash+'|'+ts.toISOString());
+  S.prevHash=chain;
+  const shot={key,label:meta.label,img,ts,imgHash,chain,metrics:{...CAM.metrics},warns:S.warns};
+  S.warns=0;
+  const idx=S.current.keys.indexOf(key); S.current.shots[idx]=shot;
+  const f=$('#flash'); if(f){f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}
+  try{navigator.vibrate&&navigator.vibrate(40)}catch(e){}
+  addLog(`Foto “${meta.label}” capturada. Selo ${short(chain)} encadeado à foto anterior`,true);
+  CAM.lastThumb=CAM.curThumb; CAM.hold=0; CAM.prev=null;
+  if(key==='painel') readPanel();
+  advance();
+}
+function readPanel(){
+  const c=S.current.contract; S.current.km=c.kmDefault; S.current.fuel=c.fuelDefault; S.km=S.current.km; S.fuel=S.current.fuel;
+  addLog(`IA leu o painel: ${km(S.km)} e ${S.fuel}/8 de combustível`,false);
+}
+function advance(){
+  S.qi++;
+  if(S.qi>=S.queue.length){finishCapture();return;}
+  CAM.busy=false; CAM.hold=0; S.sheet=false;
+  paintShotHeader(); armShot();
+  if(S.native){const s=$('#say'); if(s){s.textContent='Toque em “Tirar foto” para abrir a câmera do celular.'; s.className='say';}}
+}
+function finishCapture(){
+  stopCamera();
+  addLog('Vistoria completa. Análise da IA iniciada',false);
+  S.screen='review'; S.sheet=false; renderClient();
+}
+
+/* ---------- telas do cliente ---------- */
+function head(){return `<div class="scr-head"><span class="lg"><i></i>localiza FAST</span><span class="mono" style="color:var(--muted)">${S.current&&S.current.contract?esc(S.current.contract.id):''}</span></div>`}
+function miniMap(zone){
+  const on=z=>zone===z?'fill="#7AE01F"':'fill="#ffffff33"';
+  return `<svg class="minimap" viewBox="0 0 54 70" aria-hidden="true"><rect x="12" y="6" width="30" height="58" rx="11" fill="#ffffff22" stroke="#fff8" stroke-width="1.5"/>
+  <rect x="14" y="2" width="26" height="6" rx="3" ${on('front')}/><rect x="14" y="62" width="26" height="6" rx="3" ${on('rear')}/>
+  <rect x="6" y="18" width="6" height="34" rx="3" ${on('left')}/><rect x="42" y="18" width="6" height="34" rx="3" ${on('right')}/>
+  <rect x="17" y="22" width="20" height="8" rx="3" ${on('dash')}/><rect x="17" y="32" width="20" height="14" rx="3" ${on('inside')}/><rect x="17" y="48" width="20" height="10" rx="3" ${on('trunk')}/></svg>`;
+}
+function paintShotHeader(){
+  const key=curKey(), m=SHOTS[key];
+  const n=S.queue.length, i=S.qi+1;
+  const t=$('#shotTitle'); if(!t) return;
+  t.textContent=(ORDER_TITLE[key]||m.label);
+  $('#shotSub').textContent = S.retake ? 'Refazer esta foto' : `Foto ${i} de ${n}`;
+  $('#shotTip').textContent=m.tip;
+  $('#mapHolder').innerHTML=miniMap(m.zone);
+  $('#strip').innerHTML=S.current.keys.map((k,ix)=>{const sh=S.current.shots[ix];return `<b class="${k===key?'cur':''}" style="${sh?`background-image:url(${sh.img})`:''}" title="${esc(SHOTS[k].label)}"></b>`}).join('');
+}
+function renderClient(){
+  const el=$('#scr'); if(!el) return;
+  if(S.screen!=='capture'){stopCamera();}
+  const fn={start:vStart,contract:vContract,capture:vCapture,review:vReview,park:vPark,video:vVideo,done:vDone}[S.screen];
+  fn(el);
+}
+function vStart(el){
+  el.innerHTML=`${head()}<div class="scr-body">
+    <h1 class="big">Devolva o carro pelo app. Sem fila.</h1>
+    <p class="lead">Informe o contrato ou a placa. Você fotografa o carro, confere as cobranças e recebe o comprovante.</p>
+    <div class="field"><input id="q" placeholder="Contrato ou placa" autocomplete="off" aria-label="Contrato ou placa"><button class="btn sm" data-act="search">Buscar</button></div>
+    ${S.searchErr?`<p class="err" role="alert">${esc(S.searchErr)}</p>`:''}
+    <p class="lead" style="margin-top:20px;margin-bottom:0">Contratos de demonstração</p>
+    <div class="chips">${Object.values(CONTRACTS).map(c=>`<button class="chipbtn" data-act="pick" data-id="${c.id}"><div><b>${c.id} · ${esc(c.model)}</b><span>${c.protection==='total'?'Proteção total':'Proteção básica'} · ${esc(c.agency)}</span></div><span class="pill mute">${c.plate}</span></button>`).join('')}</div>
+    <button class="btn sec" style="margin-top:14px" data-act="demoVideo">Ver demonstração gravada</button>
+  </div>`;
+}
+function vContract(el){
+  const c=S.current.contract, n=S.current.keys.length;
+  el.innerHTML=`${head()}<div class="scr-body">
+    <h1 class="big" style="font-size:28px">${esc(c.model)}</h1>
+    <p class="lead">${esc(c.cat)} · placa ${c.plate}</p>
+    <div class="card">
+      <div class="kv"><span>Local de devolução</span><span>${esc(c.agency)}</span></div>
+      <div class="kv"><span>Proteção</span><span>${c.protection==='total'?'Total':'Básica'}</span></div>
+      <div class="kv"><span>Odômetro na retirada</span><span>${km(c.kmOut)}</span></div>
+      <div class="kv"><span>Combustível na retirada</span><span>${c.fuelOut}/8</span></div>
+    </div>
+    <div class="card"><h3>Como funciona</h3><ul class="plain">
+      <li>Você faz ${n} fotos guiadas, em cerca de 3 minutos. ${c.protection==='total'?'Com proteção total, a vistoria é mais curta.':''}</li>
+      <li>O app dispara cada foto sozinho quando a imagem está clara, nítida e firme.</li>
+      <li>As fotos só podem ser feitas aqui. Não dá para enviar imagens da galeria.</li>
+      <li>Antes de confirmar, você vê cada cobrança e o motivo.</li></ul></div>
+  </div>
+  <div class="scr-foot"><button class="btn" data-act="begin">Gravar agora</button><button class="btn sec" data-act="demoVideo">Ver demonstração gravada</button><button class="btn sec" data-act="restart">Trocar contrato</button></div>`;
+}
+function vCapture(el){
+  if(S.sheet) stopCamera();
+  el.innerHTML=`<div class="cam-screen">
+    <div class="cam-view" id="camHolder"></div>
+    <div class="cam-top"><div><div class="t" id="shotTitle"></div><div class="s" id="shotSub"></div><div class="s" id="shotTip" style="max-width:220px;margin-top:4px"></div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><span class="live">Ao vivo</span><div id="mapHolder"></div><button class="xbtn" data-act="voice">Voz: sim</button><button class="xbtn" data-act="exit">Sair</button></div></div>
+    <div class="guide"><div class="brk"></div><div class="ring" id="ring"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="6"/><circle class="fg" id="ringfg" cx="60" cy="60" r="52" fill="none" stroke-width="6"/></svg></div></div>
+    <div class="cam-bot"><div class="say" id="say" role="status" aria-live="polite">Abrindo a câmera…</div><div style="text-align:center"><button class="xbtn hide" id="forceBtn" data-act="force">Tirar agora</button></div>
+      <div class="meters"><span><i id="mLuz"></i>Luz</span><span><i id="mNit"></i>Nitidez</span><span><i id="mFir"></i>Firmeza</span><button class="xbtn hide" id="torchBtn" data-act="torch">Lanterna</button></div>
+      <div class="strip" id="strip"></div></div>
+    <div class="flash" id="flash"></div>
+    <div class="camfail hide" id="camFail"><h3 style="font-size:22px">Câmera indisponível</h3><p id="camFailMsg" style="margin:0;opacity:.85"></p>
+      <button class="btn" data-act="retryCam">Tentar de novo</button><button class="btn sec" style="color:#fff;border-color:#fff6" data-act="nativeCam">Usar a câmera do celular, foto a foto</button><button class="btn sec" style="color:#fff;border-color:#fff6" data-act="demoCam">Usar câmera simulada</button></div>
+    ${S.sheet?sheetHTML():''}
+  </div>`;
+  paintShotHeader();
+  if(!S.sheet) startCamera();
+  else {const f=$('#fuel'); if(f) updFuel();}
+}
+function sheetHTML(){
+  const c=S.current.contract, kmv=S.km??c.kmDefault, fv=S.fuel??5;
+  return `<div class="sheet"><div>
+    <h3 style="font-size:22px">Confirme a leitura do painel</h3>
+    <p class="lead" style="margin:0">A IA leu estes valores na foto. Corrija se algo estiver errado. <span class="sim">leitura simulada</span></p>
+    <label for="kmIn" style="font-weight:600">Odômetro (km)</label>
+    <input id="kmIn" type="number" inputmode="numeric" value="${kmv}">
+    <label for="fuel" style="font-weight:600">Combustível: <span id="fuelTxt"></span></label>
+    <div class="fuelbar" id="fuelBar"></div>
+    <input id="fuel" type="range" min="0" max="8" step="1" value="${fv}">
+    <p class="err" id="sheetErr" role="alert"></p>
+    <button class="btn" data-act="readings">Confirmar leitura</button>
+  </div></div>`;
+}
+function updFuel(){const v=+$('#fuel').value; $('#fuelTxt').textContent=v+'/8'; $('#fuelBar').innerHTML=Array.from({length:8},(_,i)=>`<i class="${i<v?'on':''}"></i>`).join('');}
+
+function calcCharges(){
+  const c=S.current.contract, items=[];
+  const miss=Math.max(0,c.fuelOut-S.current.fuel);
+  if(miss>0) items.push({label:'Combustível',detail:`Saiu com ${c.fuelOut}/8 e voltou com ${S.current.fuel}/8`,amount:miss*32,why:'Quando o tanque volta com menos combustível do que saiu, cobramos a diferença por oitavo de tanque. O valor é fictício neste protótipo.'});
+  if(S.current.dirty) items.push({label:'Limpeza especial',detail:'Manchas e sujeira no interior',amount:120,why:'Cobramos limpeza especial quando o interior volta com manchas, lixo ou areia além do uso normal. Poeira leve e marcas pequenas não entram.'});
+  if(S.current.damage){const cov=c.protection==='total'; items.push({label:'Avaria nova',detail:'Arranhão de cerca de 12 cm na lateral esquerda',amount:cov?0:450,covered:cov,why:cov?'Esta avaria é nova em relação às fotos da retirada, mas está coberta pela sua proteção total. Você não paga nada.':'Esta avaria é nova em relação às fotos da retirada. Com proteção básica, você paga a participação prevista no contrato. O valor é fictício neste protótipo.'});}
+  return items;
+}
+function vReview(el){
+  const cur=S.current, c=cur.contract;
+  if(!cur.analyzed){cur.analyzed=true; cur.dirty=DEMO.dirty; cur.damage=DEMO.damage;}
+  const items=calcCharges(), total=items.reduce((a,b)=>a+b.amount,0);
+  const flagged=cur.dirty||cur.damage;
+  el.innerHTML=`${head()}<div class="scr-body">
+    <h1 class="big" style="font-size:28px">Confira sua devolução</h1>
+    <div class="grid">${cur.keys.map((k,i)=>{const s=cur.shots[i];return `<figure class="th" style="margin:0"><img src="${s.img}" alt="Foto: ${esc(s.label)}"><figcaption><span>${esc(s.label)}</span><button data-act="retake" data-i="${i}">Refazer</button></figcaption></figure>`}).join('')}</div>
+    <div class="card"><h3>O que a IA encontrou <span class="sim">análise simulada</span></h3>
+      <div class="row"><div>Placa<small>Lida na frente e na traseira</small></div><span class="pill">Confere</span></div>
+      <div class="row"><div>Odômetro<small>${km(cur.km)} · ${km(cur.km-c.kmOut)} rodados</small></div><span class="pill">Lido</span></div>
+      <div class="row"><div>Combustível<small>${cur.fuel}/8</small></div><span class="pill ${cur.fuel<c.fuelOut?'warn':''}">${cur.fuel<c.fuelOut?'Abaixo da retirada':'Ok'}</span></div>
+      <div class="row"><div>Limpeza<small>${cur.dirty?'Sujeira visível no interior':'Interior limpo'}</small></div><span class="pill ${cur.dirty?'warn':''}">${cur.dirty?'Atenção':'Ok'}</span></div>
+      <div class="row"><div>Avarias<small>${cur.damage?'1 nova, comparada à retirada':'Nenhuma nova'}</small></div><span class="pill ${cur.damage?'bad':''}">${cur.damage?'Nova':'Ok'}</span></div>
+    </div>
+    <div class="card"><h3>Cobranças</h3>
+      ${items.length?items.map(i=>`<div class="row"><div><b>${i.label}</b><small>${esc(i.detail)}</small><details class="why"><summary>Por que estou vendo isso?</summary><p>${esc(i.why)}</p></details></div><div style="text-align:right;font-weight:700">${i.covered?'<span class="pill">Coberto</span>':brl(i.amount)}</div></div>`).join(''):'<p class="lead" style="margin:0">Nenhuma cobrança adicional.</p>'}
+      <div class="total"><span>Total</span><span>${brl(total)}</span></div>
+      <p class="lead" style="margin:6px 0 0;font-size:13px">${flagged?'Um atendente confere as fotos antes de encerrar o contrato.':'Sem pendências, o contrato é encerrado automaticamente.'}</p>
+    </div>
+    ${S.contesting?`<div class="card"><h3>Conte o que está diferente</h3><div class="field"><textarea id="note" placeholder="Ex.: esse arranhão já existia na retirada."></textarea></div></div>`:''}
+  </div>
+  <div class="scr-foot">
+    ${S.contesting?`<button class="btn" data-act="contestSend">Enviar contestação</button><button class="btn sec" data-act="contestCancel">Voltar</button>`
+    :`<button class="btn" data-act="accept">${total>0?`Aceitar e pagar ${brl(total)} (Pix de demonstração)`:'Concluir devolução'}</button>${items.length?'<button class="btn warn" data-act="contestOpen">Não concordo com a cobrança</button>':''}`}
+  </div>`;
+}
+function vDone(el){
+  const r=S.current.record;
+  const msg={
+    'Contrato encerrado':['Devolução concluída','Seu contrato foi encerrado. O carro foi trancado com a chave no porta-luvas. Pode seguir viagem.'],
+    'Aguardando vistoria':['Recebemos sua vistoria','Um atendente confere as fotos e você recebe o resultado aqui no app. Você não precisa ir ao balcão.'],
+    'Divergência':['Contestação registrada','A equipe vai comparar as fotos com as da retirada e responder pelo app. Nenhum valor foi cobrado ainda.']}[r.status]||['Recebido',''];
+  el.innerHTML=`${head()}<div class="scr-body">
+    <span class="pill ${r.status==='Divergência'?'bad':r.status==='Aguardando vistoria'?'warn':''}" style="margin-top:14px">${r.status}</span>
+    <h1 class="big" style="font-size:30px;margin-top:10px">${msg[0]}</h1>
+    <p class="lead">${msg[1]}</p>
+    <div class="card"><h3>Comprovante</h3>
+      <div class="kv"><span>Protocolo</span><span class="mono">${r.id}</span></div>
+      <div class="kv"><span>Carro</span><span>${esc(r.contract.model)} · ${r.contract.plate}</span></div>
+      <div class="kv"><span>Odômetro / tanque</span><span>${km(r.km)} · ${r.fuel}/8</span></div>
+      <div class="kv"><span>Total</span><span>${brl(r.total)}</span></div>
+      ${r.spot?`<div class="kv"><span>Vaga combinada</span><span>Confirmada · ${r.spot.dist} m</span></div>`:''}${r.lockAt?`<div class="kv"><span>Carro trancado</span><span>${hhmmss(r.lockAt)}</span></div>`:''}
+      <div class="kv"><span>Tempo no app</span><span>${Math.floor(r.durationSec/60)} min ${r.durationSec%60} s</span></div>
+      <div class="kv"><span>Selo final das fotos</span><span class="mono">${short(r.finalHash)}</span></div>
+    </div></div>
+  <div class="scr-foot"><button class="btn" data-act="goTeam">Ver como a equipe enxerga</button><button class="btn sec" data-act="restart">Nova devolução</button></div>`;
+}
+
+/* ---------- câmera do celular, foto a foto ---------- */
+function nativeUI(){
+  stopCamera();
+  const h=$('#camHolder'); if(!h) return;
+  h.innerHTML='<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,#12301f,#050a07)"></div>';
+  const g=$('.guide'); if(g) g.classList.add('hide');
+  const lv=$('.live'); if(lv) lv.classList.add('hide');
+  const m=$('.meters'); if(m) m.outerHTML='<div style="margin:8px 0 14px"><label class="btn" for="nativeIn" style="display:block;text-align:center">Tirar foto</label><input type="file" id="nativeIn" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0"></div>';
+  const s=$('#say'); if(s){s.textContent='Toque em “Tirar foto” para abrir a câmera do celular.'; s.className='say';}
+  addLog('Modo câmera do celular: foto a foto, com checagem de luz e nitidez',true);
+}
+function measure(src){
+  const W=160,H=120; actx.drawImage(src,0,0,W,H);
+  const d=actx.getImageData(0,0,W,H).data, N=W*H, g=new Float32Array(N); let sum=0,clip=0;
+  for(let i=0;i<N;i++){const y=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2];g[i]=y;sum+=y;if(y>245)clip++;}
+  let s=0,s2=0,n=0;
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const c=y*W+x;const l=-4*g[c]+g[c-1]+g[c+1]+g[c-W]+g[c+W];s+=l;s2+=l*l;n++;}
+  return {mean:sum/N, clip:clip/N, lv:s2/n-(s/n)*(s/n)};
+}
+function handleNative(file){
+  const say=$('#say'); if(!file||!say) return;
+  if(file.lastModified && Date.now()-file.lastModified>5*60*1000){
+    say.textContent='Esta foto não foi tirada agora. Tire uma nova pela câmera.'; say.className='say';
+    addLog('Foto recusada: arquivo antigo, não foi capturado agora',true); return;
+  }
+  say.textContent='Analisando a foto…'; say.className='say';
+  const url=URL.createObjectURL(file), img=new Image();
+  img.onload=async()=>{
+    URL.revokeObjectURL(url);
+    const m=measure(img);
+    let msg=null;
+    if(m.mean<30) msg='Pouca luz. Procure um lugar mais claro e tire de novo.';
+    else if(m.mean>242||m.clip>0.35) msg='Reflexo forte. Mude um pouco o ângulo e tire de novo.';
+    else if(m.lv<3) msg='Imagem sem nitidez. Aproxime, espere o foco e tire de novo.';
+    if(msg){S.warns++; say.textContent=msg; say.className='say'; addLog('Foto recusada: '+msg,true); return;}
+    const tw=640, th=Math.round(tw*img.naturalHeight/img.naturalWidth), cv=document.createElement('canvas');
+    cv.width=tw; cv.height=th; cv.getContext('2d').drawImage(img,0,0,tw,th);
+    await commitShot(cv,{luz:Math.round(m.mean),nitidez:Math.round(m.lv),firmeza:0});
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url); say.textContent='Não foi possível ler a foto. Tente de novo.';};
+  img.src=url;
+}
+async function commitShot(cv,metrics){
+  const key=curKey(), meta=SHOTS[key];
+  const img=cv.toDataURL('image/jpeg',.8), ts=new Date();
+  const imgHash=await sha256(img), chain=await sha256(S.prevHash+'|'+imgHash+'|'+ts.toISOString());
+  S.prevHash=chain;
+  S.current.shots[S.current.keys.indexOf(key)]={key,label:meta.label,img,ts,imgHash,chain,metrics,warns:S.warns}; S.warns=0;
+  addLog(`Foto “${meta.label}” aprovada. Selo ${short(chain)} encadeado à foto anterior`,true);
+  if(key==='painel') readPanel();
+  advance();
+}
+
+/* ---------- demonstração gravada ---------- */
+function vVideo(el){
+  const src = DEMO_VIDEO || S.vidUrl;
+  el.innerHTML=`${head()}<div class="scr-body">
+    <h1 class="big" style="font-size:26px">Demonstração gravada</h1>
+    <p class="lead">Vistoria feita num carro de verdade, gravada na tela do celular.</p>
+    ${src?`<video class="vid" id="demoVid" src="${src}" controls playsinline loop></video><p class="err hide" id="vidErr" role="alert">Não foi possível reproduzir este vídeo aqui. Toque o arquivo direto no aparelho.</p>`
+    :`<div class="card"><h3>Escolha o vídeo</h3><p class="lead" style="margin:0 0 10px">Selecione o arquivo gravado neste aparelho. Ele só toca aqui e não é enviado a lugar nenhum.</p><input type="file" id="vidFile" accept="video/*"></div>`}
+  </div><div class="scr-foot">${src&&!DEMO_VIDEO?'<button class="btn sec" data-act="clearVideo">Trocar vídeo</button>':''}<button class="btn" data-act="restart">Gravar agora</button></div>`;
+  const v=$('#demoVid'); if(v) v.addEventListener('error',()=>{const e=$('#vidErr'); if(e) e.classList.remove('hide')});
+}
+
+/* ---------- vaga combinada e trancamento ---------- */
+function haversine(a,b,c,d){const R=6371000,t=x=>x*Math.PI/180,dl=t(c-a),dn=t(d-b);const q=Math.sin(dl/2)**2+Math.cos(t(a))*Math.cos(t(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(q));}
+function fmtDist(m){return m>=1000?(m/1000).toFixed(1).replace('.',',')+' km':m+' m'}
+function checkSpot(){
+  S.spot=null;
+  const done=sp=>{S.spot=sp; addLog(sp.ok?`Vaga combinada confirmada, a ${sp.dist} m`:(sp.denied?'Localização negada: devolução não pode ser concluída':`Fora da vaga combinada, a ${fmtDist(sp.dist)}`),sp.real); if(S.screen==='park') renderClient();};
+  if(DEMO.far){setTimeout(()=>done({ok:false,dist:4200,real:false}),700);return;}
+  if(S.anchor && navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(p=>{const d=Math.round(haversine(p.coords.latitude,p.coords.longitude,S.anchor.lat,S.anchor.lon));done({ok:d<=100,dist:d,real:true});},
+      ()=>done({ok:false,dist:null,denied:true,real:true}),{timeout:6000,enableHighAccuracy:true});
+    return;
+  }
+  setTimeout(()=>done({ok:true,dist:12,real:false}),700);
+}
+function vPark(el){
+  const c=S.current.contract, sp=S.spot;
+  const tag=sp?`<span class="${sp.real?'real':'sim'}">${sp.real?'real':'simulado'}</span>`:'';
+  let box;
+  if(!sp) box=`<div class="card"><h3>Verificando sua localização…</h3><p class="lead" style="margin:0">Permita a localização se o navegador pedir.</p></div>`;
+  else if(sp.ok) box=`<div class="card"><h3>Você está na vaga combinada ${tag}</h3><p class="lead" style="margin:0">A ${sp.dist} m do local de devolução em ${esc(c.agency)}.</p></div>`;
+  else if(sp.denied) box=`<div class="card" style="border-color:var(--danger)"><h3 style="color:var(--danger)">Localização desativada ${tag}</h3><p class="lead" style="margin:0">Ative a localização para provar que o carro está na vaga combinada. Sem isso, a devolução não conclui.</p></div>`;
+  else box=`<div class="card" style="border-color:var(--danger)"><h3 style="color:var(--danger)">Você está longe da vaga combinada ${tag}</h3><p class="lead" style="margin:0">Você está a ${fmtDist(sp.dist)} do local de devolução. Leve o carro até a vaga em ${esc(c.agency)} para concluir.</p></div>`;
+  el.innerHTML=`${head()}<div class="scr-body">
+    <h1 class="big" style="font-size:28px">Deixe o carro na vaga combinada</h1>
+    ${box}
+    <div class="card"><h3>Antes de trancar</h3><ul class="plain"><li>Pare na vaga combinada.</li><li>Deixe a chave no porta-luvas.</li><li>Feche todas as portas.</li><li>O carro tranca sozinho quando você confirmar. <span class="sim">simulado</span></li></ul></div>
+  </div><div class="scr-foot">${sp&&sp.ok?`<button class="btn" data-act="lock" ${S.locking?'disabled':''}>${S.locking?'Trancando o carro…':'Deixei a chave e fechei as portas'}</button>`:(sp?'<button class="btn" data-act="recheck">Verificar de novo</button>':'')}<button class="btn sec" data-act="parkBack">Voltar às cobranças</button></div>`;
+}
+
+/* ---------- fluxo ---------- */
+function openContract(c){
+  S.current={contract:c, keys:shotKeys(c), shots:[], fuel:null, km:null};
+  S.screen='contract'; S.searchErr=''; S.contesting=false; S.sheet=false;
+  S.km=null;S.fuel=null; S.prevHash='GENESIS'; S.warns=0;
+  addLog(`Contrato ${c.id} localizado (${c.protection==='total'?'proteção total':'proteção básica'})`,false);
+  renderClient();
+}
+function geoCheck(){
+  if(!navigator.geolocation){addLog('Localização indisponível neste navegador',true);return;}
+  navigator.geolocation.getCurrentPosition(p=>{
+    S.geo={lat:+p.coords.latitude.toFixed(4),lon:+p.coords.longitude.toFixed(4),acc:Math.round(p.coords.accuracy)};
+    addLog(`Local registrado (${S.geo.lat}, ${S.geo.lon}, ±${S.geo.acc} m). A área da agência é simulada`,true);
+  },()=>{S.geo=null;addLog('Localização não autorizada. No app nativo, a vistoria só vale dentro da área da agência',true);},{timeout:4000});
+}
+async function submit(contest,note){
+  const cur=S.current, items=calcCharges(), total=items.reduce((a,b)=>a+b.amount,0);
+  const flagged=cur.dirty||cur.damage;
+  let status = contest?'Divergência':flagged?'Aguardando vistoria':'Contrato encerrado';
+  const finalHash=await sha256(S.prevHash+'|'+cur.km+'|'+cur.fuel+'|'+total);
+  const rec={id:'DV-'+Math.random().toString(36).slice(2,7).toUpperCase(), contract:cur.contract, shots:cur.shots.filter(Boolean), km:cur.km, fuel:cur.fuel,
+    items, total, status, auto:status==='Contrato encerrado', contested:!!contest, note:note||'', createdAt:new Date(), durationSec:Math.round((Date.now()-S.startedAt)/1000),
+    flagged, dirty:cur.dirty, damage:cur.damage, geo:S.geo, spot:S.spot, lockAt:S.lockAt, finalHash, timeline:[{t:new Date(),text:'Vistoria enviada pelo cliente'}]};
+  if(status==='Contrato encerrado') rec.timeline.push({t:new Date(),text:'Sem pendências: contrato encerrado automaticamente'});
+  if(contest) rec.timeline.push({t:new Date(),text:'Cliente contestou a cobrança'});
+  if(S.lockAt&&!contest) rec.timeline.push({t:S.lockAt,text:'Vaga combinada confirmada e carro trancado automaticamente'});
+  if(flagged&&!contest) rec.timeline.push({t:new Date(),text:'IA sinalizou item para conferência humana'});
+  S.returns.unshift(rec); S.selected=rec.id; cur.record=rec;
+  addLog(`Devolução ${rec.id} enviada: ${status}`,false);
+  S.screen='done'; renderClient(); renderTeam(); renderKpi(); updateBadge();
+}
+
+/* ---------- equipe ---------- */
+function pillFor(s){return s==='Divergência'?'bad':s==='Aguardando vistoria'?'warn':s==='Contrato encerrado'?'mute':''}
+function renderTeam(){
+  const el=$('#view-equipe'); if(!el) return;
+  const cnt=s=>S.returns.filter(r=>r.status===s).length;
+  const sel=S.returns.find(r=>r.id===S.selected)||S.returns[0];
+  el.innerHTML=`<h2 style="font-size:28px;margin-bottom:14px">Painel da equipe</h2>
+  <div class="stats">${STATUS.map(s=>`<div class="stat"><b>${cnt(s)}</b><span>${s}</span></div>`).join('')}</div>
+  ${S.returns.length?`<div class="team"><div class="list">${S.returns.map(r=>`<button class="item" data-act="select" data-id="${r.id}" aria-current="${sel&&sel.id===r.id}"><div class="r"><b>${esc(r.contract.model)}</b><span class="pill ${pillFor(r.status)}">${r.status}</span></div><small>${r.contract.id} · ${r.contract.plate} · ${hhmmss(r.createdAt)}</small></button>`).join('')}
+    <button class="ghost" data-act="seed">Gerar exemplos</button></div><div>${sel?detail(sel):''}</div></div>`
+  :`<div class="empty"><p style="margin:0 0 14px">Nenhuma devolução ainda. Faça uma na aba Cliente ou gere exemplos para ver o painel.</p><div class="actions" style="justify-content:center"><button class="btn sm" data-act="tab" data-tab="cliente">Fazer uma devolução</button><button class="btn sm sec" data-act="seed">Gerar exemplos</button></div></div>`}`;
+}
+function detail(r){
+  const a=[];
+  if(r.status==='Aguardando vistoria') a.push(`<button class="btn" data-act="validate" data-id="${r.id}">Validar vistoria</button><button class="btn warn" data-act="diverge" data-id="${r.id}">Registrar divergência</button>`);
+  if(r.status==='Divergência') a.push(`<button class="btn" data-act="validate" data-id="${r.id}">Acatar contestação e validar</button>`);
+  if(r.status==='Vistoria validada') a.push(`<button class="btn" data-act="close" data-id="${r.id}">Encerrar contrato</button>`);
+  return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><div><h2>${esc(r.contract.model)} · ${r.contract.plate}</h2><p class="sub" style="margin:0">${r.id} · ${r.contract.id} · proteção ${r.contract.protection==='total'?'total':'básica'} · ${esc(r.contract.client)}</p></div><span class="pill ${pillFor(r.status)}">${r.status}</span></div>
+  <div class="actions">${a.join('')}</div></div>
+  <div class="panel" style="margin-top:14px"><h2>Leituras e cobranças</h2>
+    <div class="kv"><span>Odômetro</span><span>${km(r.km)} (${km(r.km-r.contract.kmOut)} desde a retirada)</span></div>
+    <div class="kv"><span>Combustível</span><span>${r.fuel}/8 (saiu com ${r.contract.fuelOut}/8)</span></div>
+    <div class="kv"><span>Limpeza</span><span>${r.dirty?'Sujeira no interior':'Ok'}</span></div>
+    <div class="kv"><span>Avarias</span><span>${r.damage?'1 nova na lateral esquerda':'Nenhuma nova'}</span></div>
+    ${r.spot?`<div class="kv"><span>Vaga combinada</span><span>Confirmada a ${r.spot.dist} m${r.spot.real?'':' (simulado)'}</span></div>`:''}${r.lockAt?`<div class="kv"><span>Carro trancado</span><span>${hhmmss(r.lockAt)} (automático)</span></div>`:''}
+    ${r.items.map(i=>`<div class="kv"><span>${i.label}</span><span>${i.covered?'Coberto pela proteção':brl(i.amount)}</span></div>`).join('')}
+    <div class="kv"><span><b>Total</b></span><span><b>${brl(r.total)}</b></span></div>
+    ${r.note?`<div class="kv"><span>Nota</span><span>${esc(r.note)}</span></div>`:''}</div>
+  <div class="panel" style="margin-top:14px"><h2>Evidências da vistoria</h2><p class="sub">Cada foto traz horário, selo encadeado e as medidas de qualidade no momento da captura.</p>
+    <div class="evi">${r.shots.map(s=>`<figure><img src="${s.img}" alt="Foto: ${esc(s.label)}"><figcaption><b>${esc(s.label)}</b>${hhmmss(s.ts)}<br><span class="mono">${short(s.chain)}</span><br>luz ${s.metrics.luz} · nitidez ${s.metrics.nitidez} · firmeza ${s.metrics.firmeza}</figcaption></figure>`).join('')}</div>
+    <p class="sub" style="margin-top:12px">${r.geo?`Local: ${r.geo.lat}, ${r.geo.lon} (±${r.geo.acc} m).`:'Local não informado nesta sessão.'} Selo final: <span class="mono">${short(r.finalHash)}</span></p></div>
+  <div class="panel" style="margin-top:14px"><h2>Histórico</h2><ul class="log">${r.timeline.map(t=>`<li><time class="mono">${hhmmss(t.t)}</time>${esc(t.text)}</li>`).join('')}</ul></div>`;
+}
+function setStatus(id,status,text){
+  const r=S.returns.find(x=>x.id===id); if(!r) return;
+  r.status=status; r.timeline.push({t:new Date(),text}); if(status==='Contrato encerrado')r.auto=false;
+  renderTeam(); renderKpi(); updateBadge();
+}
+function updateBadge(){
+  const n=S.returns.filter(r=>r.status==='Aguardando vistoria'||r.status==='Divergência').length;
+  const b=$('#teamN'); b.textContent=n; b.classList.toggle('hide',n===0);
+}
+async function seed(){
+  const mk=async(c,flags,status,k,f,note)=>{
+    const keys=shotKeys(c), shots=[]; let prev='GENESIS';
+    for(const key of keys){
+      const cv=document.createElement('canvas'); cv.width=480; cv.height=640;
+      drawScene(cv.getContext('2d'),480,640,key,1,{dirty:flags.dirty,damage:flags.damage,plate:c.plate,km:k.toLocaleString('pt-BR')});
+      const img=cv.toDataURL('image/jpeg',.75), ts=new Date(Date.now()-Math.random()*600000), ih=await sha256(img), ch=await sha256(prev+'|'+ih+'|'+ts.toISOString()); prev=ch;
+      shots.push({key,label:SHOTS[key].label,img,ts,imgHash:ih,chain:ch,metrics:{luz:120+Math.round(Math.random()*40),nitidez:80+Math.round(Math.random()*120),firmeza:+(Math.random()*4).toFixed(1)},warns:0});
+    }
+    const prevCur=S.current; S.current={contract:c,keys,shots,fuel:f,km:k,dirty:flags.dirty,damage:flags.damage};
+    const items=calcCharges(); S.current=prevCur;
+    const total=items.reduce((a,b)=>a+b.amount,0);
+    S.returns.push({id:'DV-'+Math.random().toString(36).slice(2,7).toUpperCase(),contract:c,shots,km:k,fuel:f,items,total,status,auto:status==='Contrato encerrado',contested:status==='Divergência',note:note||'',createdAt:new Date(),durationSec:150+Math.round(Math.random()*90),flagged:flags.dirty||flags.damage,dirty:flags.dirty,damage:flags.damage,geo:null,spot:{dist:14,ok:true,real:false},lockAt:new Date(),finalHash:await sha256(prev),timeline:[{t:new Date(),text:'Exemplo gerado para demonstração'}]});
+  };
+  await mk(CONTRACTS['LZ-48213'],{},'Contrato encerrado',42310,8);
+  await mk(CONTRACTS['LZ-51877'],{damage:true,dirty:false},'Aguardando vistoria',23950,7);
+  await mk(CONTRACTS['LZ-51877'],{damage:true},'Divergência',23880,8,'Esse arranhão já existia na retirada.');
+  S.selected=S.returns[0].id; renderTeam(); renderKpi(); updateBadge();
+}
+
+/* ---------- indicadores ---------- */
+function renderKpi(){
+  const el=$('#view-kpi'); if(!el) return;
+  const R=S.returns, n=R.length;
+  const pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+  const autos=R.filter(r=>r.auto).length, rev=R.filter(r=>r.flagged).length, cont=R.filter(r=>r.contested).length;
+  const dur=n?Math.round(R.reduce((a,r)=>a+r.durationSec,0)/n):0;
+  const rows=[
+    ['Devoluções concluídas sem atendente','Mede a autonomia real da jornada. É o equivalente, na devolução, dos 25% de clientes autônomos da retirada.',pct(autos,n),'60% em 6 meses'],
+    ['Tempo da devolução, do app ao comprovante','Mostra se a promessa de “sem fila” se cumpre.',n?`${Math.floor(dur/60)} min ${dur%60} s`:'—','Menos de 4 min'],
+    ['Devoluções enviadas para revisão humana','Mede a carga que sobra para o pátio e se a IA está confiante.',pct(rev,n),'Menos de 20%'],
+    ['Contestações de cobrança','Mede a confiança do cliente nos critérios e nas fotos.',pct(cont,n),'Menos de 3%'],
+    ['Contestações acatadas pela equipe','Se for alta, a IA ou os critérios estão cobrando errado.',pct(R.filter(r=>r.contested&&(r.status==='Vistoria validada'||r.status==='Contrato encerrado')).length,cont),'Menos de 30%'],
+    ['Avisos de qualidade por foto','Mostra onde o cliente tem dificuldade: luz, tremor ou foco.',n?(R.reduce((a,r)=>a+r.shots.reduce((x,s)=>x+(s.warns||0),0),0)/Math.max(1,R.reduce((a,r)=>a+r.shots.length,0))).toFixed(1):'—','Menos de 1 por foto'],
+    ['Tempo entre devolução e carro liberado para novo aluguel','Fecha o ciclo com a preparação do pátio. Precisa de integração com a operação.','—','Redução de 20%'],
+    ['NPS logo após a devolução','Compara com o balcão e com os 85,9 do cliente FAST.','—','Igual ou acima de 85']
+  ];
+  el.innerHTML=`<h2 style="font-size:28px;margin-bottom:6px">Indicadores sugeridos</h2><p class="lead" style="max-width:620px">A coluna “Nesta sessão” usa as devoluções feitas neste protótipo (${n}). As metas são propostas para discussão, não dados da Localiza.</p>
+  <div class="panel scroll-x"><table class="k"><thead><tr><th>Indicador</th><th>Por que acompanhar</th><th>Nesta sessão</th><th>Meta proposta</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td><b>${r[2]}</b></td><td>${r[3]}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ---------- eventos ---------- */
+function setTab(t){
+  S.tab=t;
+  ['cliente','equipe','kpi'].forEach(k=>{
+    $('#view-'+k).classList.toggle('hide',k!==t);
+    $('#tab-'+k).setAttribute('aria-selected',k===t);
+  });
+  if(t!=='cliente') stopCamera(); else if(S.screen==='capture'&&!S.sheet) startCamera();
+  if(t==='equipe') renderTeam();
+  if(t==='kpi') renderKpi();
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const a=b.dataset.act;
+  switch(a){
+    case 'tab': setTab(b.dataset.tab); break;
+    case 'theme': {const r=document.documentElement; const dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches; r.dataset.theme=dark?'light':'dark'; break;}
+    case 'search': {const q=($('#q').value||'').trim().toUpperCase().replace(/\s/g,''); const c=Object.values(CONTRACTS).find(x=>x.id===q||x.plate===q||x.id.replace('-','')===q);
+      if(c) openContract(c); else {S.searchErr='Não encontramos esse contrato. Confira o número ou a placa.'; renderClient();} break;}
+    case 'pick': openContract(CONTRACTS[b.dataset.id]); break;
+    case 'restart': stopCamera(); S.screen='start'; S.current=null; renderClient(); break;
+    case 'begin': {
+      S.screen='capture'; S.queue=S.current.keys.map((_,i)=>i); S.qi=0; S.retake=false; S.startedAt=Date.now(); S.sheet=false; S.prevHash='GENESIS'; S.warns=0; S.current.shots=[]; S.lockAt=null; S.spot=null;
+      addLog('Vistoria iniciada. Fotos só pela câmera do app',false); geoCheck(); CAM.lastThumb=null;
+      try{speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){}
+      addLog('Verificação do aparelho (Play Integrity / App Attest) aprovada',false);
+      renderClient(); break;}
+    case 'exit': stopCamera(); S.screen=S.retake?'review':'contract'; S.retake=false; renderClient(); break;
+    case 'force': if(CAM.running&&!CAM.busy&&CAM.el){CAM.busy=true; takePhoto();} break;
+    case 'voice': S.voice=!S.voice; b.textContent=S.voice?'Voz: sim':'Voz: não'; if(!S.voice){try{speechSynthesis.cancel()}catch(e){}} break;
+    case 'torch': try{CAM.torch=!CAM.torch; await CAM.track.applyConstraints({advanced:[{torch:CAM.torch}]});}catch(err){} break;
+    case 'retryCam': S.native=false; $('#camFail').classList.add('hide'); startCamera(); break;
+    case 'nativeCam': S.native=true; $('#camFail').classList.add('hide'); startCamera(); break;
+    case 'demoCam': DEMO.cam=true; $('#d-cam').checked=true; $('#camFail').classList.add('hide'); startCamera(); break;
+    case 'readings': {
+      const v=+$('#kmIn').value, c=S.current.contract;
+      if(!v||v<c.kmOut){$('#sheetErr').textContent=`O odômetro não pode ser menor que na retirada (${km(c.kmOut)}).`;break;}
+      S.current.km=v; S.current.fuel=+$('#fuel').value; S.km=v; S.fuel=S.current.fuel;
+      addLog(`Painel confirmado: ${km(v)} e ${S.fuel}/8 de combustível`,false);
+      S.sheet=false;
+      const s=$('.sheet'); if(s) s.remove();
+      advance(); if(S.screen==='capture'){startCamera();} break;}
+    case 'retake': S.queue=[+b.dataset.i]; S.qi=0; S.retake=true; S.screen='capture'; S.sheet=false; renderClient(); break;
+    case 'contestOpen': S.contesting=true; renderClient(); break;
+    case 'contestCancel': S.contesting=false; renderClient(); break;
+    case 'contestSend': submit(true,($('#note').value||'').trim()||'Cliente não informou o motivo.'); break;
+    case 'accept': S.screen='park'; S.spot=null; S.locking=false; renderClient(); checkSpot(); break;
+    case 'recheck': S.spot=null; renderClient(); checkSpot(); break;
+    case 'parkBack': S.screen='review'; renderClient(); break;
+    case 'lock': S.locking=true; renderClient(); setTimeout(()=>{S.lockAt=new Date(); S.locking=false; addLog('Carro trancado automaticamente pela telemetria',false); submit(false);},1400); break;
+    case 'demoVideo': S.screen='video'; renderClient(); break;
+    case 'clearVideo': S.vidUrl=''; renderClient(); break;
+    case 'anchor': if(navigator.geolocation){navigator.geolocation.getCurrentPosition(p=>{S.anchor={lat:p.coords.latitude,lon:p.coords.longitude};$('#anchorTxt').textContent='Vaga definida na sua posição atual, com raio de 100 m.';addLog('Vaga combinada definida na posição atual (raio de 100 m)',true);},()=>{$('#anchorTxt').textContent='Não foi possível obter a localização. Libere a permissão e tente de novo.';},{timeout:6000,enableHighAccuracy:true});} break;
+    case 'goTeam': setTab('equipe'); break;
+    case 'select': S.selected=b.dataset.id; renderTeam(); break;
+    case 'validate': setStatus(b.dataset.id,'Vistoria validada','Equipe validou a vistoria'); break;
+    case 'diverge': setStatus(b.dataset.id,'Divergência','Equipe registrou divergência'); break;
+    case 'close': setStatus(b.dataset.id,'Contrato encerrado','Equipe encerrou o contrato'); break;
+    case 'seed': await seed(); break;
+  }
+});
+document.addEventListener('input',e=>{ if(e.target.id==='fuel') updFuel(); });
+document.addEventListener('change',e=>{
+  if(e.target.id==='nativeIn'){ const f=e.target.files&&e.target.files[0]; handleNative(f); setTimeout(()=>{try{e.target.value=''}catch(x){}},0); return; }
+  if(e.target.id==='vidFile' && e.target.files && e.target.files[0]){ S.vidUrl=URL.createObjectURL(e.target.files[0]); renderClient(); }
+});
+['cam','dark','shake','dirty','damage','far'].forEach(k=>{
+  $('#d-'+k).addEventListener('change',e=>{
+    DEMO[k]=e.target.checked;
+    if(k==='cam' && S.screen==='capture' && !S.sheet){startCamera();}
+    if((k==='dirty'||k==='damage') && S.screen==='review'){addLog('Altere antes de iniciar uma nova vistoria: a IA já analisou esta devolução',false);}
+  });
+});
+setTab('cliente'); renderClient(); renderTeam(); renderKpi();
+</script>
+</body>
+</html>
